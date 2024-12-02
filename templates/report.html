@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iCélio - Relatório</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .toggle-checkbox:checked + .toggle-label .dot {
+            transform: translateX(16px);
+            background-color: white;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar (same as tasks.html) -->
+        <aside class="w-64 bg-white p-6 hidden md:flex flex-col justify-between border-r border-gray-200">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-600 mb-8">iCélio</h1>
+                <nav class="space-y-4">
+                    <a href="/" class="flex items-center py-2 px-4 rounded-lg hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition duration-300">
+                        <span class="material-icons mr-3">dashboard</span>Dashboard
+                    </a>
+                    <a href="/tasks" class="flex items-center py-2 px-4 rounded-lg hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition duration-300">
+                        <span class="material-icons mr-3">task</span>Tarefas
+                    </a>
+                    <a href="/report" class="flex items-center py-2 px-4 rounded-lg bg-indigo-100 text-indigo-700 transition duration-300">
+                        <span class="material-icons mr-3">description</span>Relatório
+                    </a>
+                </nav>
+            </div>
+            <div>
+                <a href="#" class="flex items-center py-2 px-4 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-700 transition duration-300">
+                    <span class="material-icons mr-3">logout</span>Sair
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto scrollbar-hide">
+            <!-- Mobile Header -->
+            <div class="md:hidden bg-white p-4 flex justify-between items-center border-b">
+                <h1 class="text-xl font-bold text-indigo-600">iCélio</h1>
+                <button class="text-gray-600" onclick="toggleSidebar()">
+                    <span class="material-icons">menu</span>
+                </button>
+            </div>
+
+            <div class="p-8">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800">Relatório</h1>
+                    <div class="space-x-4">
+                        <button onclick="openEntryModal()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition duration-300">
+                            <span class="material-icons align-middle mr-1 text-sm">trending_up</span>
+                            Nova Entrada
+                        </button>
+                        <button onclick="openExitModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-300">
+                            <span class="material-icons align-middle mr-1 text-sm">trending_down</span>
+                            Nova Saída
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Entries Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 p-6">Entradas</h2>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projeto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recorrência</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for entry in entries %}
+                            <tr>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ entry[6] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">R$ {{ entry[1] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ entry[2] | datetimeformat }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ entry[3] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    <button onclick="openEditEntryModal({{ entry[0] }}, {{ entry[7] }}, {{ entry[1] }}, '{{ entry[2] }}', {{ 'true' if entry[3] else 'false' }}, {{ entry[4] if entry[4] else 'null' }})" class="text-blue-500 hover:text-blue-700">
+                                        <span class="material-icons">edit</span>
+                                    </button>
+                                    <button onclick="deleteEntry({{ entry[0] }})" class="text-red-500 hover:text-red-700">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Exits Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <h2 class="text-xl font-semibold text-gray-800 p-6">Saídas</h2>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projeto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recorrência</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for exit in exits %}
+                            <tr>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ exit[6] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">R$ {{ exit[1] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ exit[2] | datetimeformat }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ exit[3] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    <button onclick="openEditExitModal({{ exit[0] }}, {{ exit[7] }}, {{ exit[1] }}, '{{ exit[2] }}', {{ 'true' if exit[3] else 'false' }}, {{ exit[4] if exit[4] else 'null' }})" class="text-blue-500 hover:text-blue-700">
+                                        <span class="material-icons">edit</span>
+                                    </button>
+                                    <button onclick="deleteExit({{ exit[0] }})" class="text-red-500 hover:text-red-700">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Entry Modal -->
+    <div id="entryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onclick="handleModalClick(event, 'entryModal')">
+        <div class="relative top-20 mx-auto p-6 border w-96 shadow-xl rounded-xl bg-white">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Nova Entrada</h3>
+                <button onclick="closeModal('entryModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form class="space-y-5" action="{{ url_for('add_entry_route') }}" method="POST">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Projeto</label>
+                    <select name="project_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white">
+                        {% for project in projects %}
+                        <option value="{{ project[0] }}">{{ project[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
+                    <input type="number" step="0.01" name="amount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div id="entryDate">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                    <input type="date" name="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" value="{{ current_date }}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Recorrência</label>
+                    <label class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="entryRecurrence" name="recurrence" class="sr-only toggle-checkbox" onclick="toggleRecurrence('entryRecurrenceSelect', 'entryDate')">
+                            <div class="block bg-gray-300 w-10 h-6 rounded-full toggle-label"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                        </div>
+                        <div class="ml-3 text-gray-700">Ativar</div>
+                    </label>
+                </div>
+                <div id="entryRecurrenceSelect" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Dia do Mês</label>
+                    <select name="recurrence_day" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white" onchange="updateNextDate('entryRecurrenceSelect', 'entryNextDate')">
+                        <option value="">Selecione o dia</option>
+                        <!-- Options for days 1 to 31 -->
+                        {% for day in range(1, 32) %}
+                        <option value="{{ day }}">{{ day }}</option>
+                        {% endfor %}
+                    </select>
+                    <p id="entryNextDate" class="text-sm text-red-500 mt-2 hidden"></p>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal('entryModal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Exit Modal -->
+    <div id="exitModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onclick="handleModalClick(event, 'exitModal')">
+        <div class="relative top-20 mx-auto p-6 border w-96 shadow-xl rounded-xl bg-white">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Nova Saída</h3>
+                <button onclick="closeModal('exitModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form class="space-y-5" action="{{ url_for('add_exit_route') }}" method="POST">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Projeto</label>
+                    <select name="project_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white">
+                        {% for project in projects %}
+                        <option value="{{ project[0] }}">{{ project[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
+                    <input type="number" step="0.01" name="amount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div id="exitDate">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                    <input type="date" name="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" value="{{ current_date }}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Recorrência</label>
+                    <label class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="exitRecurrence" name="recurrence" class="sr-only toggle-checkbox" onclick="toggleRecurrence('exitRecurrenceSelect', 'exitDate')">
+                            <div class="block bg-gray-300 w-10 h-6 rounded-full toggle-label"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                        </div>
+                        <div class="ml-3 text-gray-700">Ativar</div>
+                    </label>
+                </div>
+                <div id="exitRecurrenceSelect" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Dia do Mês</label>
+                    <select name="recurrence_day" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white" onchange="updateNextDate('exitRecurrenceSelect', 'exitNextDate')">
+                        <option value="">Selecione o dia</option>
+                        <!-- Options for days 1 to 31 -->
+                        {% for day in range(1, 32) %}
+                        <option value="{{ day }}">{{ day }}</option>
+                        {% endfor %}
+                    </select>
+                    <p id="exitNextDate" class="text-sm text-red-500 mt-2 hidden"></p>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal('exitModal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Entry Modal -->
+    <div id="editEntryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onclick="handleModalClick(event, 'editEntryModal')">
+        <div class="relative top-20 mx-auto p-6 border w-96 shadow-xl rounded-xl bg-white">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Editar Entrada</h3>
+                <button onclick="closeModal('editEntryModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="editEntryForm" class="space-y-5" action="{{ url_for('edit_entry_route') }}" method="POST">
+                <input type="hidden" name="entry_id" id="editEntryId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Projeto</label>
+                    <select name="project_id" id="editEntryProjectId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white">
+                        {% for project in projects %}
+                        <option value="{{ project[0] }}">{{ project[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
+                    <input type="number" step="0.01" name="amount" id="editEntryAmount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div id="editEntryDate">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                    <input type="date" name="date" id="editEntryDateInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Recorrência</label>
+                    <label class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="editEntryRecurrence" name="recurrence" class="sr-only toggle-checkbox" onclick="toggleRecurrence('editEntryRecurrenceSelect', 'editEntryDate')">
+                            <div class="block bg-gray-300 w-10 h-6 rounded-full toggle-label"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                        </div>
+                        <div class="ml-3 text-gray-700">Ativar</div>
+                    </label>
+                </div>
+                <div id="editEntryRecurrenceSelect" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Dia do Mês</label>
+                    <select name="recurrence_day" id="editEntryRecurrenceDay" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white" onchange="updateNextDate('editEntryRecurrenceSelect', 'editEntryNextDate')">
+                        <option value="">Selecione o dia</option>
+                        <!-- Options for days 1 to 31 -->
+                        {% for day in range(1, 32) %}
+                        <option value="{{ day }}">{{ day }}</option>
+                        {% endfor %}
+                    </select>
+                    <p id="editEntryNextDate" class="text-sm text-red-500 mt-2 hidden"></p>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal('editEntryModal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Exit Modal -->
+    <div id="editExitModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onclick="handleModalClick(event, 'editExitModal')">
+        <div class="relative top-20 mx-auto p-6 border w-96 shadow-xl rounded-xl bg-white">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Editar Saída</h3>
+                <button onclick="closeModal('editExitModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="editExitForm" class="space-y-5" action="{{ url_for('edit_exit_route') }}" method="POST">
+                <input type="hidden" name="exit_id" id="editExitId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Projeto</label>
+                    <select name="project_id" id="editExitProjectId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white">
+                        {% for project in projects %}
+                        <option value="{{ project[0] }}">{{ project[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
+                    <input type="number" step="0.01" name="amount" id="editExitAmount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div id="editExitDate">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                    <input type="date" name="date" id="editExitDateInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Recorrência</label>
+                    <label class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="editExitRecurrence" name="recurrence" class="sr-only toggle-checkbox" onclick="toggleRecurrence('editExitRecurrenceSelect', 'editExitDate')">
+                            <div class="block bg-gray-300 w-10 h-6 rounded-full toggle-label"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                        </div>
+                        <div class="ml-3 text-gray-700">Ativar</div>
+                    </label>
+                </div>
+                <div id="editExitRecurrenceSelect" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Dia do Mês</label>
+                    <select name="recurrence_day" id="editExitRecurrenceDay" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white" onchange="updateNextDate('editExitRecurrenceSelect', 'editExitNextDate')">
+                        <option value="">Selecione o dia</option>
+                        <!-- Options for days 1 to 31 -->
+                        {% for day in range(1, 32) %}
+                        <option value="{{ day }}">{{ day }}</option>
+                        {% endfor %}
+                    </select>
+                    <p id="editExitNextDate" class="text-sm text-red-500 mt-2 hidden"></p>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal('editExitModal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal functions
+        function openEntryModal() {
+            document.getElementById('entryModal').classList.remove('hidden');
+        }
+
+        function openExitModal() {
+            document.getElementById('exitModal').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function handleModalClick(event, modalId) {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('div');
+            
+            // Close only if clicking outside the modal content
+            if (event.target === modal) {
+                closeModal(modalId);
+            }
+        }
+
+        function toggleRecurrence(selectId, dateId) {
+            const select = document.getElementById(selectId);
+            const date = document.getElementById(dateId);
+            select.classList.toggle('hidden');
+            date.classList.toggle('hidden');
+            if (!date.classList.contains('hidden')) {
+                date.querySelector('input').value = '';
+            }
+        }
+
+        function updateNextDate(selectId, nextDateId) {
+            const select = document.getElementById(selectId).querySelector('select');
+            const nextDate = document.getElementById(nextDateId);
+            const day = select.value;
+            if (day) {
+                fetch(`/next_date?day=${day}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        nextDate.textContent = `Próxima data será ${data.next_date}`;
+                        nextDate.classList.remove('hidden');
+                    });
+            } else {
+                nextDate.textContent = '';
+                nextDate.classList.add('hidden');
+            }
+        }
+
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.querySelector('aside');
+            sidebar.classList.toggle('hidden');
+        }
+
+        // Toggle switch animation
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const dot = this.nextElementSibling.querySelector('.dot');
+                if (this.checked) {
+                    dot.style.transform = 'translateX(1.25rem)';
+                    dot.style.backgroundColor = '#4f46e5';
+                } else {
+                    dot.style.transform = 'translateX(0)';
+                    dot.style.backgroundColor = '#ffffff';
+                }
+            });
+        });
+
+        function openEditEntryModal(id, projectId, amount, date, recurrence, recurrenceDay) {
+            console.log('openEditEntryModal called with:', id, projectId, amount, date, recurrence, recurrenceDay);
+            document.getElementById('editEntryId').value = id;
+            document.getElementById('editEntryProjectId').value = projectId;
+            document.getElementById('editEntryAmount').value = amount;
+            document.getElementById('editEntryDateInput').value = date;
+            document.getElementById('editEntryRecurrence').checked = recurrence;
+            if (recurrenceDay) {
+                document.getElementById('editEntryRecurrenceDay').value = recurrenceDay;
+            }
+            
+            if (recurrence) {
+                document.getElementById('editEntryRecurrenceSelect').classList.remove('hidden');
+                document.getElementById('editEntryDate').classList.add('hidden');
+            } else {
+                document.getElementById('editEntryRecurrenceSelect').classList.add('hidden');
+                document.getElementById('editEntryDate').classList.remove('hidden');
+            }
+            document.getElementById('editEntryModal').classList.remove('hidden');
+        }
+
+        function openEditExitModal(id, projectId, amount, date, recurrence, recurrenceDay) {
+            console.log('openEditExitModal called with:', id, projectId, amount, date, recurrence, recurrenceDay);
+            document.getElementById('editExitId').value = id;
+            document.getElementById('editExitProjectId').value = projectId;
+            document.getElementById('editExitAmount').value = amount;
+            document.getElementById('editExitDateInput').value = date;
+            document.getElementById('editExitRecurrence').checked = recurrence;
+            if (recurrenceDay) {
+                document.getElementById('editExitRecurrenceDay').value = recurrenceDay;
+            }
+            
+            if (recurrence) {
+                document.getElementById('editExitRecurrenceSelect').classList.remove('hidden');
+                document.getElementById('editExitDate').classList.add('hidden');
+            } else {
+                document.getElementById('editExitRecurrenceSelect').classList.add('hidden');
+                document.getElementById('editExitDate').classList.remove('hidden');
+            }
+            document.getElementById('editExitModal').classList.remove('hidden');
+        }
+
+        function deleteEntry(id) {
+            if (confirm('Tem certeza que deseja excluir esta entrada?')) {
+                fetch(`/delete_entry/${id}`, { method: 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            location.reload();
+                        }
+                    });
+            }
+        }
+
+        function deleteExit(id) {
+            if (confirm('Tem certeza que deseja excluir esta saída?')) {
+                fetch(`/delete_exit/${id}`, { method: 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            location.reload();
+                        }
+                    });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iCélio - Tarefas</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar (same as index.html) -->
+        <aside class="w-64 bg-white p-6 hidden md:flex flex-col justify-between border-r border-gray-200">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-600 mb-8">iCélio</h1>
+                <nav class="space-y-4">
+                    <a href="/" class="flex items-center py-2 px-4 rounded-lg hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition duration-300">
+                        <span class="material-icons mr-3">dashboard</span>Dashboard
+                    </a>
+                    <a href="/tasks" class="flex items-center py-2 px-4 rounded-lg bg-indigo-100 text-indigo-700 transition duration-300">
+                        <span class="material-icons mr-3">task</span>Tarefas
+                    </a>
+                    <a href="/report" class="flex items-center py-2 px-4 rounded-lg hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition duration-300">
+                        <span class="material-icons mr-3">description</span>Relatório
+                    </a>
+                </nav>
+            </div>
+            <div>
+                <a href="#" class="flex items-center py-2 px-4 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-700 transition duration-300">
+                    <span class="material-icons mr-3">logout</span>Sair
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto scrollbar-hide">
+            <!-- Mobile Header -->
+            <div class="md:hidden bg-white p-4 flex justify-between items-center border-b">
+                <h1 class="text-xl font-bold text-indigo-600">iCélio</h1>
+                <button class="text-gray-600" onclick="toggleSidebar()">
+                    <span class="material-icons">menu</span>
+                </button>
+            </div>
+
+            <div class="p-8">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800">Tarefas</h1>
+                    <div class="space-x-4">
+                        <button onclick="openProjectModal()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition duration-300">
+                            <span class="material-icons align-middle mr-1 text-sm">add</span>
+                            Novo Projeto
+                        </button>
+                        <button onclick="openTaskModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-300">
+                            <span class="material-icons align-middle mr-1 text-sm">add</span>
+                            Nova Tarefa
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pending Tasks Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 p-6">Tarefas Pendentes</h2>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarefa</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projeto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for task in pending_tasks %}
+                            <tr>
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" class="h-4 w-4 text-indigo-600 rounded border-gray-300" {% if task[5] %}checked{% endif %} onclick="updateTaskStatus({{ task[0] }}, this.checked)">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ task[1] }}</div>
+                                    <div class="text-sm text-gray-500">{{ task[4] }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ task[2] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ task[3] | datetimeformat }}</td>
+                                <td class="px-6 py-4">
+                                    <button class="text-red-600 hover:text-red-900" onclick="deleteTask({{ task[0] }})">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Completed Tasks Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <h2 class="text-xl font-semibold text-gray-800 p-6">Tarefas Concluídas</h2>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarefa</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projeto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for task in completed_tasks %}
+                            <tr>
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" class="h-4 w-4 text-indigo-600 rounded border-gray-300" {% if task[5] %}checked{% endif %} onclick="updateTaskStatus({{ task[0] }}, this.checked)">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ task[1] }}</div>
+                                    <div class="text-sm text-gray-500">{{ task[4] }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ task[2] }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ task[3] | datetimeformat }}</td>
+                                <td class="px-6 py-4">
+                                    <button class="text-red-600 hover:text-red-900" onclick="deleteTask({{ task[0] }})">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div id="taskModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onclick="handleModalClick(event, 'taskModal')">
+        <div class="relative top-20 mx-auto p-6 border w-96 shadow-xl rounded-xl bg-white">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Nova Tarefa</h3>
+                <button onclick="closeModal('taskModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form class="space-y-5" action="{{ url_for('add_task_route') }}" method="POST">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Tarefa</label>
+                    <input type="text" name="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Projeto</label>
+                    <select name="project_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white">
+                        {% for project in projects %}
+                        <option value="{{ project[0] }}">{{ project[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                    <input type="date" name="due_date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descrição (opcional)</label>
+                    <textarea name="description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" rows="3"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal('taskModal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div id="projectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onclick="handleModalClick(event, 'projectModal')">
+        <div class="relative top-20 mx-auto p-6 border w-96 shadow-xl rounded-xl bg-white">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Novo Projeto</h3>
+                <button onclick="closeModal('projectModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form class="space-y-5" action="{{ url_for('add_project_route') }}" method="POST">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Projeto</label>
+                    <input type="text" name="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal('projectModal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal functions
+        function openTaskModal() {
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        function openProjectModal() {
+            document.getElementById('projectModal').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function handleModalClick(event, modalId) {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('div');
+            
+            // Close only if clicking outside the modal content
+            if (event.target === modal) {
+                closeModal(modalId);
+            }
+        }
+
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.querySelector('aside');
+            sidebar.classList.toggle('hidden');
+        }
+
+        function updateTaskStatus(taskId, completed) {
+            fetch(`/update_task_status/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `completed=${completed}`
+            }).then(() => {
+                location.reload();
+            });
+        }
+
+        function deleteTask(taskId) {
+            fetch(`/delete_task/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(() => {
+                location.reload();
+            });
+        }
+    </script>
+</body>
+</html>  
